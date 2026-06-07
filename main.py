@@ -11,7 +11,7 @@ import json
 models.Base.metadata.create_all(bind=engine)
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
-groq_client = Groq(api_key="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")
+groq_client = Groq(api_key="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")
 
 def seed_data(db: Session):
     if db.query(models.Student).count() == 0:
