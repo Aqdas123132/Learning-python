@@ -1,34 +1,33 @@
 from sqlalchemy.orm import Session
-from models import Item
-from schemas import ItemCreate, ItemUpdate
+import models, schemas
 
-def get_all_items(db: Session):
-    return db.query(Item).all()
-
-def get_item(db: Session, item_id: int):
-    return db.query(Item).filter(Item.id == item_id).first()
-
-def create_item(db: Session, item: ItemCreate):
-    db_item = Item(name=item.name, description=item.description)
-    db.add(db_item)
+def create_student(db: Session, student: schemas.StudentCreate):
+    db_student = models.Student(**student.dict())
+    db.add(db_student)
     db.commit()
-    db.refresh(db_item)
-    return db_item
+    db.refresh(db_student)
+    return db_student
 
-def update_item(db: Session, item_id: int, item: ItemUpdate):
-    db_item = db.query(Item).filter(Item.id == item_id).first()
-    if db_item:
-        if item.name is not None:
-            db_item.name = item.name
-        if item.description is not None:
-            db_item.description = item.description
-        db.commit()
-        db.refresh(db_item)
-    return db_item
+def get_all_students(db: Session):
+    return db.query(models.Student).all()
 
-def delete_item(db: Session, item_id: int):
-    db_item = db.query(Item).filter(Item.id == item_id).first()
-    if db_item:
-        db.delete(db_item)
-        db.commit()
-    return db_item
+def get_student(db: Session, student_id: int):
+    return db.query(models.Student).filter(models.Student.id == student_id).first()
+
+def update_student(db: Session, student_id: int, student: schemas.StudentUpdate):
+    db_student = db.query(models.Student).filter(models.Student.id == student_id).first()
+    if db_student is None:
+        return None
+    for key, value in student.dict(exclude_unset=True).items():
+        setattr(db_student, key, value)
+    db.commit()
+    db.refresh(db_student)
+    return db_student
+
+def delete_student(db: Session, student_id: int):
+    db_student = db.query(models.Student).filter(models.Student.id == student_id).first()
+    if db_student is None:
+        return None
+    db.delete(db_student)
+    db.commit()
+    return db_student

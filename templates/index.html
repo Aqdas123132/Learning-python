@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>EduTrack</title>
+<style>
+:root { --orange:#ff6b00; --dark:#1a2035; --sidebar-w:220px; }
+* { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',sans-serif; }
+body { background:#f0f2f5; display:flex; min-height:100vh; }
+
+.sidebar { width:var(--sidebar-w); background:var(--dark); display:flex; flex-direction:column; position:fixed; top:0; left:0; height:100vh; z-index:200; transition:transform .3s ease; overflow-y:auto; }
+.logo { padding:18px 16px; display:flex; align-items:center; gap:10px; border-bottom:1px solid rgba(255,255,255,.08); flex-shrink:0; }
+.logo-icon { width:36px; height:36px; background:var(--orange); border-radius:8px; display:flex; align-items:center; justify-content:center; }
+.logo-icon svg { width:20px; height:20px; }
+.logo span { color:#fff; font-size:16px; font-weight:600; }
+.nav-label { color:rgba(255,255,255,.3); font-size:10px; letter-spacing:1px; padding:18px 16px 6px; }
+.nav-item { display:flex; align-items:center; gap:10px; padding:10px 16px; color:rgba(255,255,255,.55); font-size:13.5px; cursor:pointer; margin:2px 8px; border-radius:8px; transition:all .15s; }
+.nav-item:hover { background:rgba(255,255,255,.07); color:#fff; }
+.nav-item.active { background:var(--orange); color:#fff; }
+.nav-item svg { width:18px; height:18px; flex-shrink:0; }
+
+.main { margin-left:var(--sidebar-w); flex:1; display:flex; flex-direction:column; min-height:100vh; transition:margin .3s ease; }
+.topbar { background:#fff; padding:14px 24px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #e8eaf0; position:sticky; top:0; z-index:100; }
+.topbar-left { display:flex; align-items:center; gap:12px; }
+.menu-btn { display:none; background:none; border:none; cursor:pointer; padding:6px; border-radius:8px; }
+.menu-btn svg { width:22px; height:22px; color:#555; }
+.page-title { font-size:20px; font-weight:600; color:#1a2035; }
+.topbar-right { display:flex; align-items:center; gap:12px; }
+.admin-badge { display:flex; align-items:center; gap:8px; background:#f4f5f7; padding:6px 12px; border-radius:20px; }
+.admin-ava { width:28px; height:28px; border-radius:50%; background:var(--orange); display:flex; align-items:center; justify-content:center; color:#fff; font-size:12px; font-weight:600; }
+.admin-badge span { font-size:13px; color:#555; }
+.content { padding:24px; flex:1; }
+
+.stats { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:24px; }
+.stat-card { border-radius:14px; padding:20px; display:flex; flex-direction:column; gap:8px; position:relative; overflow:hidden; }
+.stat-card.c1 { background:var(--orange); }
+.stat-card.c2 { background:var(--dark); }
+.stat-card.c3 { background:#e85d00; }
+.stat-lbl { color:rgba(255,255,255,.7); font-size:10px; font-weight:600; letter-spacing:.8px; }
+.stat-num { color:#fff; font-size:32px; font-weight:700; line-height:1; }
+.stat-sub { color:rgba(255,255,255,.6); font-size:11px; }
+.stat-ico { position:absolute; right:16px; top:16px; width:36px; height:36px; background:rgba(255,255,255,.15); border-radius:8px; display:flex; align-items:center; justify-content:center; }
+.stat-ico svg { width:20px; height:20px; color:rgba(255,255,255,.8); }
+
+.card { background:#fff; border-radius:14px; border:1px solid #e8eaf0; overflow:hidden; }
+.card-head { padding:16px 20px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #e8eaf0; flex-wrap:wrap; gap:10px; }
+.card-head h3 { font-size:15px; font-weight:600; color:#1a2035; }
+.card-actions { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.btn { padding:8px 16px; border-radius:8px; font-size:13px; cursor:pointer; border:none; font-weight:500; transition:all .15s; }
+.btn-primary { background:var(--dark); color:#fff; }
+.btn-primary:hover { background:#263050; }
+.btn-outline { background:#fff; color:#555; border:1px solid #ddd; }
+.btn-orange { background:var(--orange); color:#fff; }
+.btn-orange:hover { background:#e85d00; }
+.btn-sm { padding:5px 12px; font-size:12px; border-radius:6px; }
+.btn-danger { background:#fee2e2; color:#dc2626; border:none; }
+.btn-danger:hover { background:#fca5a5; }
+
+table { width:100%; border-collapse:collapse; }
+th { padding:10px 16px; text-align:left; color:#888; font-size:10px; font-weight:600; letter-spacing:.5px; background:#f8f9fb; border-bottom:1px solid #e8eaf0; }
+td { padding:12px 16px; border-bottom:1px solid #f0f2f5; font-size:13px; color:#333; }
+tr:last-child td { border-bottom:none; }
+tr:hover td { background:#fafafa; }
+.tbl-wrap { overflow-x:auto; }
+
+.stu-info { display:flex; align-items:center; gap:10px; }
+.ava { width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; flex-shrink:0; }
+.stu-name { font-size:13px; font-weight:600; color:#1a2035; }
+.stu-email { font-size:11px; color:#999; }
+
+.class-badge { font-size:11px; padding:3px 10px; border-radius:20px; font-weight:600; white-space:nowrap; }
+.cb-6 { background:#fef3c7; color:#92400e; }
+.cb-7 { background:#dbeafe; color:#1e40af; }
+.cb-8 { background:#dcfce7; color:#166534; }
+.cb-9 { background:#ede9fe; color:#5b21b6; }
+.cb-10 { background:#fee2e2; color:#991b1b; }
+
+.group-badge { font-size:10px; padding:2px 8px; border-radius:20px; font-weight:500; }
+.gb-bio { background:#dcfce7; color:#166534; }
+.gb-cs { background:#dbeafe; color:#1e40af; }
+.gb-gen { background:#f3f4f6; color:#6b7280; }
+
+.status-pill { display:inline-flex; align-items:center; gap:5px; padding:4px 12px; border-radius:20px; font-size:12px; font-weight:600; }
+.pill-topper { background:#fef9c3; color:#854d0e; }
+.pill-pass { background:#dcfce7; color:#15803d; }
+.pill-average { background:#dbeafe; color:#1e40af; }
+.pill-fail { background:#fee2e2; color:#dc2626; }
+
+.dot { width:7px; height:7px; border-radius:50%; }
+.dot.g { background:#22c55e; }
+.dot.r { background:#ef4444; }
+.dot.y { background:#f59e0b; }
+.marks-good { color:#16a34a; font-weight:700; font-size:14px; }
+.marks-bad { color:#dc2626; font-weight:700; font-size:14px; }
+.marks-avg { color:#d97706; font-weight:700; font-size:14px; }
+
+.page { display:none; }
+.page.active { display:block; }
+
+.att-summary { display:flex; gap:16px; margin-bottom:20px; flex-wrap:wrap; }
+.att-stat { background:#fff; border-radius:10px; padding:14px 20px; border:1px solid #e8eaf0; text-align:center; min-width:80px; }
+.att-stat .n { font-size:24px; font-weight:700; color:#1a2035; }
+.att-stat .l { font-size:11px; color:#999; margin-top:2px; }
+
+.att-filters { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
+.att-filter-btn { padding:6px 14px; border-radius:20px; font-size:12px; font-weight:500; cursor:pointer; border:1.5px solid #e8eaf0; background:#fff; color:#555; transition:all .15s; }
+.att-filter-btn.active { background:var(--orange); color:#fff; border-color:var(--orange); }
+
+.att-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:12px; }
+.att-card { background:#fff; border-radius:12px; padding:16px; border:1px solid #e8eaf0; display:flex; flex-direction:column; gap:10px; transition:box-shadow .15s; }
+.att-card:hover { box-shadow:0 4px 16px rgba(0,0,0,.08); }
+.att-name { font-size:13px; font-weight:600; color:#1a2035; }
+.att-sub { font-size:11px; color:#999; }
+.att-toggle { display:flex; gap:6px; }
+.att-btn { padding:5px 14px; border-radius:6px; font-size:12px; cursor:pointer; border:1.5px solid transparent; font-weight:500; transition:all .15s; flex:1; text-align:center; }
+.att-btn.present { border-color:#22c55e; color:#22c55e; }
+.att-btn.present.sel { background:#22c55e; color:#fff; }
+.att-btn.absent { border-color:#ef4444; color:#ef4444; }
+.att-btn.absent.sel { background:#ef4444; color:#fff; }
+
+.grade-bar-wrap { display:flex; align-items:center; gap:10px; }
+.grade-bar { height:8px; border-radius:4px; flex:1; background:#f0f2f5; overflow:hidden; min-width:80px; }
+.grade-fill { height:100%; border-radius:4px; }
+.gf-top { background:#f59e0b; }
+.gf-pass { background:#22c55e; }
+.gf-avg { background:#3b82f6; }
+.gf-fail { background:#ef4444; }
+
+.subject-marks { display:flex; flex-wrap:wrap; gap:4px; margin-top:4px; }
+.sub-chip { font-size:10px; padding:2px 7px; border-radius:10px; background:#f0f2f5; color:#555; }
+
+.modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:500; display:flex; align-items:center; justify-content:center; padding:16px; opacity:0; pointer-events:none; transition:opacity .25s; }
+.modal-overlay.open { opacity:1; pointer-events:all; }
+.modal { background:#fff; border-radius:16px; width:100%; max-width:560px; max-height:90vh; overflow-y:auto; transform:translateY(20px) scale(.97); transition:transform .25s; }
+.modal-overlay.open .modal { transform:translateY(0) scale(1); }
+.modal-head { padding:18px 20px; border-bottom:1px solid #e8eaf0; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; background:#fff; z-index:1; }
+.modal-head h3 { font-size:16px; font-weight:600; color:#1a2035; }
+.modal-close { background:none; border:none; font-size:20px; cursor:pointer; color:#999; line-height:1; padding:2px 6px; }
+.modal-body { padding:20px; display:flex; flex-direction:column; gap:14px; }
+.form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.form-group { display:flex; flex-direction:column; gap:5px; }
+.form-group label { font-size:12px; font-weight:600; color:#555; }
+.form-group input, .form-group select { padding:9px 12px; border:1.5px solid #e8eaf0; border-radius:8px; font-size:13px; outline:none; transition:border .15s; }
+.form-group input:focus, .form-group select:focus { border-color:var(--orange); }
+.section-title { font-size:12px; font-weight:700; color:var(--orange); letter-spacing:.5px; padding:8px 0 4px; border-bottom:1px solid #f0f2f5; margin-top:4px; }
+.marks-preview { background:#f8f9fb; border-radius:10px; padding:14px; display:flex; flex-direction:column; gap:6px; }
+.marks-preview-row { display:flex; justify-content:space-between; align-items:center; font-size:13px; }
+.marks-preview-pct { font-size:20px; font-weight:700; color:var(--orange); }
+.modal-foot { padding:14px 20px; border-top:1px solid #e8eaf0; display:flex; justify-content:flex-end; gap:8px; position:sticky; bottom:0; background:#fff; }
+
+#chat-fab { position:fixed; bottom:28px; right:28px; width:58px; height:58px; border-radius:50%; background:var(--orange); border:none; cursor:pointer; box-shadow:0 6px 24px rgba(255,107,0,.5); display:flex; align-items:center; justify-content:center; z-index:1000; transition:transform .2s, box-shadow .2s; }
+#chat-fab:hover { transform:scale(1.1); box-shadow:0 10px 32px rgba(255,107,0,.6); }
+#chat-fab.open { transform:rotate(10deg) scale(.92); }
+#chat-fab::after { content:''; position:absolute; top:4px; right:4px; width:12px; height:12px; background:#22c55e; border-radius:50%; border:2px solid #fff; animation:pulse 2s infinite; }
+@keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.4)} }
+#chat-fab svg { width:28px; height:28px; }
+
+#chat-win { position:fixed; bottom:100px; right:28px; width:340px; max-height:520px; background:#fff; border-radius:20px; box-shadow:0 20px 60px rgba(0,0,0,.15); display:flex; flex-direction:column; z-index:999; overflow:hidden; opacity:0; transform:translateY(20px) scale(.95); transform-origin:bottom right; pointer-events:none; transition:opacity .3s cubic-bezier(.34,1.56,.64,1), transform .3s cubic-bezier(.34,1.56,.64,1); }
+#chat-win.open { opacity:1; transform:translateY(0) scale(1); pointer-events:all; }
+.chat-head { background:var(--dark); padding:14px 16px; display:flex; align-items:center; gap:12px; flex-shrink:0; }
+.chat-ava { width:38px; height:38px; border-radius:50%; background:var(--orange); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.chat-ava svg { width:22px; height:22px; }
+.chat-info h4 { color:#fff; font-size:13px; font-weight:600; }
+.chat-online { display:flex; align-items:center; gap:5px; margin-top:2px; }
+.chat-online .dot { background:#22c55e; animation:pulse 2s infinite; }
+.chat-online span { color:#22c55e; font-size:11px; }
+.chat-close { margin-left:auto; background:none; border:none; color:rgba(255,255,255,.5); font-size:18px; cursor:pointer; transition:color .15s; }
+.chat-close:hover { color:#fff; }
+.chat-msgs { flex:1; overflow-y:auto; padding:14px; display:flex; flex-direction:column; gap:10px; background:#f8f9fb; }
+.chat-msgs::-webkit-scrollbar { width:3px; }
+.chat-msgs::-webkit-scrollbar-thumb { background:#ddd; border-radius:3px; }
+.msg { display:flex; flex-direction:column; max-width:85%; animation:msgIn .25s ease; }
+@keyframes msgIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+.msg.bot { align-self:flex-start; }
+.msg.user { align-self:flex-end; align-items:flex-end; }
+.bubble { padding:10px 13px; border-radius:16px; font-size:13px; line-height:1.5; }
+.msg.bot .bubble { background:#fff; color:#333; border-bottom-left-radius:4px; box-shadow:0 1px 4px rgba(0,0,0,.07); }
+.msg.user .bubble { background:var(--orange); color:#fff; border-bottom-right-radius:4px; }
+.chips { display:flex; flex-wrap:wrap; gap:5px; margin-top:7px; }
+.chip { background:#fff; border:1.5px solid var(--orange); color:var(--orange); font-size:11px; font-weight:500; padding:3px 10px; border-radius:20px; cursor:pointer; transition:all .15s; }
+.chip:hover { background:var(--orange); color:#fff; }
+.typing { display:flex; gap:5px; align-items:center; padding:10px 13px; background:#fff; border-radius:16px 16px 16px 4px; align-self:flex-start; box-shadow:0 1px 4px rgba(0,0,0,.07); }
+.typing span { width:7px; height:7px; background:#bbb; border-radius:50%; animation:bounce 1.2s infinite; }
+.typing span:nth-child(2){animation-delay:.2s}
+.typing span:nth-child(3){animation-delay:.4s}
+@keyframes bounce { 0%,80%,100%{transform:translateY(0)} 40%{transform:translateY(-6px);background:var(--orange)} }
+.chat-inp { padding:10px 12px; border-top:1px solid #eee; display:flex; gap:8px; background:#fff; flex-shrink:0; }
+.chat-inp input { flex:1; border:1.5px solid #e8eaf0; border-radius:20px; padding:8px 14px; font-size:13px; outline:none; background:#f8f9fb; transition:border .2s; }
+.chat-inp input:focus { border-color:var(--orange); background:#fff; }
+.chat-send { width:38px; height:38px; border-radius:50%; background:var(--orange); border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:transform .15s; box-shadow:0 3px 10px rgba(255,107,0,.4); }
+.chat-send:hover { transform:scale(1.08); }
+.chat-send svg { width:16px; height:16px; }
+
+#sidebar-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:150; }
+
+@media(max-width:768px){
+  .sidebar { transform:translateX(-100%); }
+  .sidebar.open { transform:translateX(0); }
+  #sidebar-overlay { display:block; opacity:0; pointer-events:none; transition:opacity .3s; }
+  #sidebar-overlay.open { opacity:1; pointer-events:all; }
+  .main { margin-left:0 !important; }
+  .menu-btn { display:flex !important; }
+  .stats { grid-template-columns:1fr 1fr; }
+  .stats .stat-card:last-child { grid-column:1/-1; }
+  #chat-win { width:calc(100vw - 24px); right:12px; bottom:96px; max-height:65vh; }
+  #chat-fab { bottom:20px; right:16px; }
+  .form-row { grid-template-columns:1fr; }
+  .admin-badge span { display:none; }
+}
+@media(max-width:480px){
+  .content { padding:14px; }
+  .stats { grid-template-columns:1fr; }
+  .stats .stat-card:last-child { grid-column:auto; }
+  .att-summary { gap:8px; }
+}
+</style>
+</head>
+<body>
+
+<div id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<nav class="sidebar" id="sidebar">
+  <div class="logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+    </div>
+    <span>EduTrack</span>
+  </div>
+  <div class="nav-label">MAIN MENU</div>
+  <div class="nav-item active" onclick="showPage('dashboard',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+    Dashboard
+  </div>
+  <div class="nav-item" onclick="showPage('students',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    Students
+  </div>
+  <div class="nav-item" onclick="showPage('attendance',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    Attendance
+  </div>
+  <div class="nav-item" onclick="showPage('grades',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    Grades
+  </div>
+  <div class="nav-label">SYSTEM</div>
+  <div class="nav-item">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M4.93 19.07l1.41-1.41M19.07 19.07l-1.41-1.41M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>
+    Settings
+  </div>
+</nav>
+
+<div class="main" id="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <button class="menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <span class="page-title" id="page-title">Dashboard</span>
+    </div>
+    <div class="topbar-right">
+      <div class="admin-badge">
+        <div class="admin-ava">A</div>
+        <span>Admin</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <div class="page active" id="page-dashboard">
+      <div class="stats">
+        <div class="stat-card c1">
+          <div class="stat-lbl">TOTAL STUDENTS</div>
+          <div class="stat-num" id="stat-total">—</div>
+          <div class="stat-sub">Enrolled</div>
+          <div class="stat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+        </div>
+        <div class="stat-card c2">
+          <div class="stat-lbl">PASSING</div>
+          <div class="stat-num" id="stat-pass">—</div>
+          <div class="stat-sub">Above 40%</div>
+          <div class="stat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div>
+        </div>
+        <div class="stat-card c3">
+          <div class="stat-lbl">FAILING</div>
+          <div class="stat-num" id="stat-fail">—</div>
+          <div class="stat-sub">Below 40%</div>
+          <div class="stat-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Recent Students</h3>
+          <button class="btn btn-primary btn-sm" onclick="showPage('students',document.querySelectorAll('.nav-item')[1])">View All</button>
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>ID</th><th>NAME</th><th>CLASS</th><th>GROUP</th><th>PERCENTAGE</th><th>STATUS</th></tr></thead>
+            <tbody id="dash-table"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="page" id="page-students">
+      <div class="card">
+        <div class="card-head">
+          <h3>Student Records</h3>
+          <div class="card-actions">
+            <select id="filter-class" onchange="renderStuTable()" style="padding:6px 10px;border:1px solid #ddd;border-radius:8px;font-size:12px;outline:none;">
+              <option value="">All Classes</option>
+              <option>Grade 6</option><option>Grade 7</option><option>Grade 8</option>
+              <option>Grade 9</option><option>Grade 10</option>
+            </select>
+            <button class="btn btn-orange btn-sm" onclick="openModal()">+ Add Student</button>
+          </div>
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>ID</th><th>NAME</th><th>CLASS</th><th>GROUP</th><th>PREV %</th><th>STATUS</th><th>ACTIONS</th></tr></thead>
+            <tbody id="stu-table"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="page" id="page-attendance">
+      <div class="att-summary" id="att-summary"></div>
+      <div class="card" style="padding:20px;">
+        <div class="card-head" style="padding:0 0 16px;border-bottom:1px solid #e8eaf0;margin-bottom:16px;">
+          <h3>Today's Attendance</h3>
+          <div class="card-actions">
+            <select id="att-class-filter" onchange="renderAttendance()" style="padding:6px 10px;border:1px solid #ddd;border-radius:8px;font-size:12px;outline:none;">
+              <option value="">All Classes</option>
+              <option>Grade 6</option><option>Grade 7</option><option>Grade 8</option>
+              <option>Grade 9</option><option>Grade 10</option>
+            </select>
+            <button class="btn btn-orange btn-sm" onclick="saveAttendance()">Save Attendance</button>
+          </div>
+        </div>
+        <div class="att-grid" id="att-grid"></div>
+      </div>
+    </div>
+
+    <div class="page" id="page-grades">
+      <div class="card">
+        <div class="card-head">
+          <h3>Student Grades — Previous Class Result</h3>
+          <select id="grade-class-filter" onchange="renderGrades()" style="padding:6px 10px;border:1px solid #ddd;border-radius:8px;font-size:12px;outline:none;">
+            <option value="">All Classes</option>
+            <option>Grade 6</option><option>Grade 7</option><option>Grade 8</option>
+            <option>Grade 9</option><option>Grade 10</option>
+          </select>
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>ID</th><th>NAME</th><th>CLASS</th><th>SUBJECT MARKS</th><th>PERCENTAGE</th><th>GRADE</th><th>STATUS</th><th>PROGRESS</th></tr></thead>
+            <tbody id="grade-table"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="modal-title">Add Student</h3>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="edit-id"/>
+      <div class="section-title">PERSONAL INFORMATION</div>
+      <div class="form-row">
+        <div class="form-group"><label>Full Name</label><input id="f-name" placeholder="Ali Hassan"/></div>
+        <div class="form-group"><label>Father Name</label><input id="f-father" placeholder="Muhammad Hassan"/></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Contact Number</label><input id="f-contact" placeholder="03001234567"/></div>
+        <div class="form-group">
+          <label>Current Class</label>
+          <select id="f-class" onchange="onClassChange()">
+            <option>Grade 6</option><option>Grade 7</option><option>Grade 8</option>
+            <option>Grade 9</option><option>Grade 10</option>
+          </select>
+        </div>
+      </div>
+      <div id="group-row" style="display:none;">
+        <div class="form-group">
+          <label>Matric Group</label>
+          <select id="f-group" onchange="renderSubjectFields()">
+            <option value="Biology Group">Biology Group</option>
+            <option value="Computer Science Group">Computer Science Group</option>
+          </select>
+        </div>
+      </div>
+      <div class="section-title" id="marks-section-title">PREVIOUS CLASS MARKS</div>
+      <div id="subject-fields"></div>
+      <div class="marks-preview" id="marks-preview" style="display:none;">
+        <div class="marks-preview-row">
+          <span style="font-weight:600;color:#555;">Calculated Percentage</span>
+          <span class="marks-preview-pct" id="calc-pct">0%</span>
+        </div>
+        <div class="marks-preview-row">
+          <span style="color:#888;font-size:12px;">Status</span>
+          <span id="calc-status" class="status-pill"></span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-orange" onclick="saveStudent()">Save Student</button>
+    </div>
+  </div>
+</div>
+
+<button id="chat-fab" onclick="toggleChat()">
+  <svg viewBox="0 0 64 64" fill="none">
+    <rect x="14" y="18" width="36" height="28" rx="8" fill="white" opacity=".95"/>
+    <circle cx="24" cy="30" r="4" fill="#ff6b00"/>
+    <circle cx="40" cy="30" r="4" fill="#ff6b00"/>
+    <circle cx="25.5" cy="28.5" r="1.5" fill="white"/>
+    <circle cx="41.5" cy="28.5" r="1.5" fill="white"/>
+    <rect x="24" y="37" width="16" height="3" rx="1.5" fill="#ff8c00" opacity=".7"/>
+    <line x1="32" y1="18" x2="32" y2="10" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+    <circle cx="32" cy="8" r="3" fill="white"/>
+    <rect x="9" y="26" width="5" height="10" rx="2.5" fill="white" opacity=".8"/>
+    <rect x="50" y="26" width="5" height="10" rx="2.5" fill="white" opacity=".8"/>
+  </svg>
+</button>
+
+<div id="chat-win">
+  <div class="chat-head">
+    <div class="chat-ava">
+      <svg viewBox="0 0 64 64" fill="none"><rect x="14" y="18" width="36" height="28" rx="8" fill="white" opacity=".95"/><circle cx="24" cy="30" r="4" fill="#ff6b00"/><circle cx="40" cy="30" r="4" fill="#ff6b00"/><circle cx="25.5" cy="28.5" r="1.5" fill="white"/><circle cx="41.5" cy="28.5" r="1.5" fill="white"/><rect x="24" y="37" width="16" height="3" rx="1.5" fill="#ff8c00" opacity=".7"/><line x1="32" y1="18" x2="32" y2="10" stroke="white" stroke-width="2.5" stroke-linecap="round"/><circle cx="32" cy="8" r="3" fill="white"/></svg>
+    </div>
+    <div class="chat-info">
+      <h4>EduTrack AI Assistant</h4>
+      <div class="chat-online"><div class="dot g"></div><span>Online</span></div>
+    </div>
+    <button class="chat-close" onclick="toggleChat()">✕</button>
+  </div>
+  <div class="chat-msgs" id="chat-msgs">
+    <div class="msg bot">
+      <div class="bubble">Hi! I'm EduTrack's AI assistant. Ask me anything about students, classes, or grades! 😊</div>
+      <div class="chips">
+        <button class="chip" onclick="sendChip(this)">Total students?</button>
+        <button class="chip" onclick="sendChip(this)">Who is topper?</button>
+        <button class="chip" onclick="sendChip(this)">Failing students?</button>
+      </div>
+    </div>
+  </div>
+  <div class="chat-inp">
+    <input id="chat-input" type="text" placeholder="Type your question…" onkeydown="if(event.key==='Enter')sendMsg()"/>
+    <button class="chat-send" onclick="sendMsg()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+    </button>
+  </div>
+</div>
+
+<script>
+const API = 'http://127.0.0.1:8000';
+let students = [];
+let attendance = {};
+
+const SUBJECTS = {
+  'Grade 6': ['English','Urdu','Mathematics','Science','Islamiat','Pakistan Studies'],
+  'Grade 7': ['English','Urdu','Mathematics','Science','Islamiat','Pakistan Studies'],
+  'Grade 8': ['English','Urdu','Mathematics','Science','Islamiat','Pakistan Studies'],
+  'Biology Group':           ['English','Urdu','Islamiat','Pakistan Studies','Tarjuma-tul-Quran','Biology','Chemistry','Physics','Mathematics'],
+  'Computer Science Group':  ['English','Urdu','Islamiat','Pakistan Studies','Tarjuma-tul-Quran','Computer Science','Chemistry','Physics','Mathematics'],
+};
+
+function getSubjects(cls, grp) {
+  if(cls === 'Grade 9' || cls === 'Grade 10') return SUBJECTS[grp] || SUBJECTS['Biology Group'];
+  return SUBJECTS[cls] || SUBJECTS['Grade 6'];
+}
+
+function calcPct(marks) {
+  const vals = Object.values(marks).filter(v => v !== '' && !isNaN(v));
+  if(!vals.length) return 0;
+  return Math.round(vals.reduce((a,b)=>a+parseFloat(b),0) / vals.length * 10) / 10;
+}
+
+function getStatus(pct) {
+  if(pct >= 80) return 'Topper';
+  if(pct >= 60) return 'Average';
+  if(pct >= 40) return 'Pass';
+  return 'Fail';
+}
+
+function gradeLabel(pct) {
+  if(pct >= 80) return 'A+';
+  if(pct >= 70) return 'A';
+  if(pct >= 60) return 'B';
+  if(pct >= 50) return 'C';
+  if(pct >= 40) return 'D';
+  return 'F';
+}
+
+const colors = ['#ff6b00','#7c3aed','#0369a1','#16a34a','#dc2626','#d97706','#0891b2','#7c3aed'];
+function avaColor(i) { return colors[i % colors.length]; }
+function initials(name) { return name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase(); }
+
+function classBadge(cls) {
+  const n = cls.replace('Grade ','');
+  return `<span class="class-badge cb-${n}">${cls}</span>`;
+}
+
+function statusPill(status) {
+  const map = { 'Topper':'pill-topper', 'Pass':'pill-pass', 'Average':'pill-average', 'Fail':'pill-fail' };
+  return `<span class="status-pill ${map[status]||'pill-pass'}">${status}</span>`;
+}
+
+function groupBadge(grp) {
+  if(!grp || grp === 'General') return '<span class="group-badge gb-gen">General</span>';
+  if(grp.includes('Biology')) return '<span class="group-badge gb-bio">Biology</span>';
+  return '<span class="group-badge gb-cs">CS Group</span>';
+}
+
+async function loadStudents() {
+  try {
+    const r = await fetch(API + '/students/');
+    const data = await r.json();
+    students = data.map(s => ({
+      ...s,
+      subjectMarks: typeof s.description === 'string' ? JSON.parse(s.description || '{}') : {},
+      group: s.email || 'General',
+      currentClass: s.department,
+      percentage: s.marks,
+      fatherName: '',
+      contact: '',
+    }));
+  } catch {
+    students = [
+      {id:1,name:"Ali Hassan",fatherName:"Hassan Ali",contact:"03001111111",currentClass:"Grade 9",group:"Computer Science Group",subjectMarks:{English:78,Urdu:82,Islamiat:90,PakStudies:85,TarjumaTulQuran:88,ComputerScience:91,Chemistry:79,Physics:83,Mathematics:86},percentage:84.7},
+      {id:2,name:"Sara Khan",fatherName:"Imran Khan",contact:"03002222222",currentClass:"Grade 7",group:"General",subjectMarks:{English:35,Urdu:38,Mathematics:30,Science:32,Islamiat:40,PakStudies:36},percentage:35.2},
+      {id:3,name:"Ayesha Malik",fatherName:"Malik Sahib",contact:"03003333333",currentClass:"Grade 10",group:"Biology Group",subjectMarks:{English:92,Urdu:88,Islamiat:95,PakStudies:91,TarjumaTulQuran:93,Biology:94,Chemistry:89,Physics:87,Mathematics:90},percentage:91.0},
+      {id:4,name:"Ahmed Raza",fatherName:"Raza Sahib",contact:"03004444444",currentClass:"Grade 8",group:"General",subjectMarks:{English:65,Urdu:70,Mathematics:72,Science:68,Islamiat:75,PakStudies:71},percentage:70.2},
+      {id:5,name:"Nimra Baig",fatherName:"Baig Sahib",contact:"03005555555",currentClass:"Grade 6",group:"General",subjectMarks:{English:28,Urdu:32,Mathematics:25,Science:30,Islamiat:35,PakStudies:29},percentage:29.8},
+    ];
+  }
+  students = students.map(s => ({...s, percentage: s.percentage || calcPct(s.subjectMarks || {})}));
+  renderAll();
+}
+
+function renderAll() { renderDash(); renderStuTable(); renderAttendance(); renderGrades(); }
+
+function stuRowBase(s, i, showActions) {
+  const pct = s.percentage || 0;
+  const status = getStatus(pct);
+  return `<tr>
+    <td style="color:#888;font-weight:500;">${s.id}</td>
+    <td><div class="stu-info">
+      <div class="ava" style="background:${avaColor(i)}22;color:${avaColor(i)}">${initials(s.name)}</div>
+      <div><div class="stu-name">${s.name}</div><div class="stu-email">${s.fatherName||''}</div></div>
+    </div></td>
+    <td>${classBadge(s.currentClass||s.department||'')}</td>
+    <td>${groupBadge(s.group)}</td>
+    <td><span class="${pct>=40?pct>=80?'marks-good':'marks-avg':'marks-bad'}">${pct}%</span></td>
+    <td>${statusPill(status)}</td>
+    ${showActions?`<td><div style="display:flex;gap:6px;">
+      <button class="btn btn-primary btn-sm" onclick="editStudent(${s.id})">Edit</button>
+      <button class="btn btn-danger btn-sm" onclick="deleteStudent(${s.id})">Delete</button>
+    </div></td>`:''}
+  </tr>`;
+}
+
+function renderDash() {
+  const pass = students.filter(s=>s.percentage>=40).length;
+  document.getElementById('stat-total').textContent = students.length;
+  document.getElementById('stat-pass').textContent = pass;
+  document.getElementById('stat-fail').textContent = students.length - pass;
+  document.getElementById('dash-table').innerHTML = students.slice(0,5).map((s,i)=>stuRowBase(s,i,false)).join('');
+}
+
+function renderStuTable() {
+  const cf = document.getElementById('filter-class').value;
+  const filtered = cf ? students.filter(s=>(s.currentClass||s.department)===cf) : students;
+  document.getElementById('stu-table').innerHTML = filtered.map((s,i)=>stuRowBase(s,i,true)).join('');
+}
+
+function renderAttendance() {
+  const cf = document.getElementById('att-class-filter').value;
+  const filtered = cf ? students.filter(s=>(s.currentClass||s.department)===cf) : students;
+  const grid = document.getElementById('att-grid');
+  grid.innerHTML = filtered.map(s => {
+    const a = attendance[s.id] || '';
+    return `<div class="att-card">
+      <div><div class="att-name">${s.name}</div>
+      <div class="att-sub">${s.currentClass||''} ${s.group&&s.group!=='General'?'· '+s.group:''}</div></div>
+      <div class="att-toggle">
+        <button class="att-btn present ${a==='present'?'sel':''}" onclick="markAtt(${s.id},'present',this)">Present</button>
+        <button class="att-btn absent ${a==='absent'?'sel':''}" onclick="markAtt(${s.id},'absent',this)">Absent</button>
+      </div>
+    </div>`;
+  }).join('');
+  const present = Object.values(attendance).filter(v=>v==='present').length;
+  const absent = Object.values(attendance).filter(v=>v==='absent').length;
+  document.getElementById('att-summary').innerHTML = `
+    <div class="att-stat"><div class="n">${filtered.length}</div><div class="l">Total</div></div>
+    <div class="att-stat"><div class="n" style="color:#22c55e">${present}</div><div class="l">Present</div></div>
+    <div class="att-stat"><div class="n" style="color:#ef4444">${absent}</div><div class="l">Absent</div></div>
+    <div class="att-stat"><div class="n" style="color:#f59e0b">${filtered.length-present-absent}</div><div class="l">Unmarked</div></div>`;
+}
+
+function markAtt(id, status, btn) {
+  attendance[id] = status;
+  btn.closest('.att-toggle').querySelectorAll('.att-btn').forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel');
+  renderAttendance();
+}
+
+function saveAttendance() {
+  const unmarked = students.length - Object.keys(attendance).length;
+  alert(unmarked>0 ? `${unmarked} students are still unmarked!` : 'Attendance saved successfully! ✅');
+}
+
+function renderGrades() {
+  const cf = document.getElementById('grade-class-filter').value;
+  const sorted = [...students].filter(s=>cf?(s.currentClass||s.department)===cf:true).sort((a,b)=>b.percentage-a.percentage);
+  document.getElementById('grade-table').innerHTML = sorted.map((s,i) => {
+    const pct = s.percentage || 0;
+    const status = getStatus(pct);
+    const gl = gradeLabel(pct);
+    const fillClass = status==='Topper'?'gf-top':status==='Fail'?'gf-fail':status==='Average'?'gf-avg':'gf-pass';
+    const subs = s.subjectMarks || {};
+    const subChips = Object.entries(subs).map(([k,v])=>`<span class="sub-chip">${k}: ${v}</span>`).join('');
+    return `<tr>
+      <td style="color:#888;font-weight:500;">${s.id}</td>
+      <td><div class="stu-info">
+        <div class="ava" style="background:${avaColor(i)}22;color:${avaColor(i)}">${initials(s.name)}</div>
+        <div class="stu-name">${s.name}</div>
+      </div></td>
+      <td>${classBadge(s.currentClass||'')}</td>
+      <td><div class="subject-marks">${subChips||'—'}</div></td>
+      <td><span class="${pct>=40?pct>=80?'marks-good':'marks-avg':'marks-bad'}">${pct}%</span></td>
+      <td><span style="background:${pct>=70?'#dcfce7':pct>=40?'#fef9c3':'#fee2e2'};color:${pct>=70?'#15803d':pct>=40?'#854d0e':'#dc2626'};padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;">${gl}</span></td>
+      <td>${statusPill(status)}</td>
+      <td style="min-width:140px"><div class="grade-bar-wrap">
+        <div class="grade-bar"><div class="grade-fill ${fillClass}" style="width:${pct}%"></div></div>
+        <span style="font-size:11px;color:#999;min-width:36px;text-align:right">${pct}%</span>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+function onClassChange() {
+  const cls = document.getElementById('f-class').value;
+  const grpRow = document.getElementById('group-row');
+  grpRow.style.display = (cls==='Grade 9'||cls==='Grade 10') ? 'block' : 'none';
+  renderSubjectFields();
+}
+
+function renderSubjectFields() {
+  const cls = document.getElementById('f-class').value;
+  const grp = document.getElementById('f-group') ? document.getElementById('f-group').value : 'General';
+  const subjects = getSubjects(cls, grp);
+  const prevClass = cls === 'Grade 6' ? 'Grade 5' : 'Grade ' + (parseInt(cls.replace('Grade ',''))-1);
+  document.getElementById('marks-section-title').textContent = `PREVIOUS CLASS MARKS (${prevClass})`;
+  const container = document.getElementById('subject-fields');
+  container.innerHTML = '';
+  const grid = document.createElement('div');
+  grid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:10px;';
+  subjects.forEach(sub => {
+    const fg = document.createElement('div');
+    fg.className = 'form-group';
+    fg.innerHTML = `<label>${sub}</label><input type="number" min="0" max="100" placeholder="0-100" id="sub-${sub.replace(/\s/g,'_')}" oninput="updatePreview()" style="width:100%"/>`;
+    grid.appendChild(fg);
+  });
+  container.appendChild(grid);
+  document.getElementById('marks-preview').style.display = 'flex';
+  updatePreview();
+}
+
+function updatePreview() {
+  const cls = document.getElementById('f-class').value;
+  const grp = document.getElementById('f-group') ? document.getElementById('f-group').value : 'General';
+  const subjects = getSubjects(cls, grp);
+  const marks = {};
+  subjects.forEach(sub => {
+    const el = document.getElementById('sub-'+sub.replace(/\s/g,'_'));
+    if(el && el.value !== '') marks[sub] = parseFloat(el.value);
+  });
+  const pct = calcPct(marks);
+  const status = getStatus(pct);
+  document.getElementById('calc-pct').textContent = pct + '%';
+  document.getElementById('calc-status').className = 'status-pill ' + {'Topper':'pill-topper','Pass':'pill-pass','Average':'pill-average','Fail':'pill-fail'}[status];
+  document.getElementById('calc-status').textContent = status;
+}
+
+function showPage(name, el) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  document.getElementById('page-title').textContent = name.charAt(0).toUpperCase()+name.slice(1);
+  if(el) el.classList.add('active');
+  if(window.innerWidth<=768) closeSidebar();
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebar-overlay').classList.toggle('open');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('open');
+}
+
+function openModal(s=null) {
+  document.getElementById('modal-title').textContent = s ? 'Edit Student' : 'Add Student';
+  document.getElementById('edit-id').value = s ? s.id : '';
+  document.getElementById('f-name').value = s ? s.name : '';
+  document.getElementById('f-father').value = s ? (s.fatherName||'') : '';
+  document.getElementById('f-contact').value = s ? (s.contact||'') : '';
+  document.getElementById('f-class').value = s ? (s.currentClass||'Grade 6') : 'Grade 6';
+  onClassChange();
+  if(s && s.subjectMarks) {
+    setTimeout(()=>{
+      Object.entries(s.subjectMarks).forEach(([k,v])=>{
+        const el = document.getElementById('sub-'+k.replace(/\s/g,'_'));
+        if(el) el.value = v;
+      });
+      updatePreview();
+    }, 50);
+  }
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+
+async function saveStudent() {
+  const id = document.getElementById('edit-id').value;
+  const cls = document.getElementById('f-class').value;
+  const grp = (cls==='Grade 9'||cls==='Grade 10') ? document.getElementById('f-group').value : 'General';
+  const subjects = getSubjects(cls, grp);
+  const marks = {};
+  subjects.forEach(sub => {
+    const el = document.getElementById('sub-'+sub.replace(/\s/g,'_'));
+    if(el && el.value !== '') marks[sub] = parseFloat(el.value);
+  });
+  const pct = calcPct(marks);
+  const name = document.getElementById('f-name').value;
+  if(!name) { alert('Please enter student name!'); return; }
+  const data = {
+    name: name,
+    email: grp,
+    department: cls,
+    marks: pct,
+    status: getStatus(pct),
+    description: JSON.stringify(marks),
+  };
+  try {
+    if(id) {
+      await fetch(API+'/students/'+id, {method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+    } else {
+      await fetch(API+'/students/', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+    }
+    await loadStudents();
+  } catch {
+    const newS = {
+      id: id || Date.now()%9000+1000,
+      name, fatherName: document.getElementById('f-father').value,
+      contact: document.getElementById('f-contact').value,
+      currentClass: cls, group: grp, subjectMarks: marks, percentage: pct,
+    };
+    if(id) { const idx=students.findIndex(s=>s.id==id); if(idx>-1) students[idx]=newS; }
+    else students.push(newS);
+    renderAll();
+  }
+  closeModal();
+}
+
+function editStudent(id) {
+  const s = students.find(s=>s.id===id);
+  if(s) openModal(s);
+}
+
+async function deleteStudent(id) {
+  if(!confirm('Are you sure you want to delete this student?')) return;
+  try {
+    await fetch(API+'/students/'+id, {method:'DELETE'});
+    await loadStudents();
+  } catch {
+    students = students.filter(s=>s.id!==id);
+    renderAll();
+  }
+}
+
+function toggleChat() {
+  document.getElementById('chat-win').classList.toggle('open');
+  document.getElementById('chat-fab').classList.toggle('open');
+}
+
+function addMsg(text, role, chips=[]) {
+  const msgs = document.getElementById('chat-msgs');
+  const div = document.createElement('div');
+  div.className = `msg ${role}`;
+  div.innerHTML = `<div class="bubble">${text}</div>`;
+  if(chips.length) {
+    const row = document.createElement('div');
+    row.className = 'chips';
+    chips.forEach(c=>{
+      const b = document.createElement('button');
+      b.className='chip'; b.textContent=c;
+      b.onclick=()=>sendChip(b);
+      row.appendChild(b);
+    });
+    div.appendChild(row);
+  }
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function sendChip(btn) { sendWithText(btn.textContent); }
+function sendMsg() {
+  const inp = document.getElementById('chat-input');
+  const t = inp.value.trim();
+  if(!t) return;
+  inp.value='';
+  sendWithText(t);
+}
+
+async function sendWithText(text) {
+  addMsg(text,'user');
+  const msgs = document.getElementById('chat-msgs');
+  const typer = document.createElement('div');
+  typer.className='typing';
+  typer.innerHTML='<span></span><span></span><span></span>';
+  msgs.appendChild(typer);
+  msgs.scrollTop=msgs.scrollHeight;
+  try {
+    const r = await fetch(API+'/chat/', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:text})});
+    const data = await r.json();
+    typer.remove();
+    addMsg(data.reply,'bot',['Total students?','Who is topper?','Failing students?']);
+    return;
+  } catch {}
+  await new Promise(res=>setTimeout(res,800+Math.random()*400));
+  typer.remove();
+  addMsg(localReply(text.toLowerCase()),'bot',['Total students?','Who is topper?','Failing students?']);
+}
+
+function localReply(t) {
+  const toppers = students.filter(s=>getStatus(s.percentage)==='Topper');
+  const failing = students.filter(s=>s.percentage<40);
+  const passing = students.filter(s=>s.percentage>=40);
+  const top = students.length ? students.reduce((a,b)=>a.percentage>b.percentage?a:b) : null;
+  if(t.includes('total')||t.includes('how many')) return `There are <b>${students.length}</b> students enrolled.`;
+  if(t.includes('topper')||t.includes('best')||t.includes('top')) return top ? `Top student is <b>${top.name}</b> with <b>${top.percentage}%</b> in ${top.currentClass}! 🏆` : 'No data.';
+  if(t.includes('fail')) return `<b>${failing.length}</b> students are failing:<br>${failing.map(s=>`• ${s.name} (${s.currentClass}) — ${s.percentage}%`).join('<br>')||'None'}`;
+  if(t.includes('pass')) return `<b>${passing.length}</b> students are passing.`;
+  if(t.includes('grade 6')||t.includes('class 6')) return `Grade 6 has <b>${students.filter(s=>s.currentClass==='Grade 6').length}</b> students.`;
+  if(t.includes('grade 7')||t.includes('class 7')) return `Grade 7 has <b>${students.filter(s=>s.currentClass==='Grade 7').length}</b> students.`;
+  if(t.includes('grade 8')||t.includes('class 8')) return `Grade 8 has <b>${students.filter(s=>s.currentClass==='Grade 8').length}</b> students.`;
+  if(t.includes('grade 9')||t.includes('class 9')) return `Grade 9 has <b>${students.filter(s=>s.currentClass==='Grade 9').length}</b> students.`;
+  if(t.includes('grade 10')||t.includes('class 10')) return `Grade 10 has <b>${students.filter(s=>s.currentClass==='Grade 10').length}</b> students.`;
+  const found = students.find(s => s.name.toLowerCase().includes(t));
+  if(found) {
+    const subs = Object.entries(found.subjectMarks || {})
+      .map(([k,v]) => `${k}: ${v}`).join(', ');
+    return `<b>${found.name}</b><br>
+      Class: ${found.currentClass}<br>
+      Group: ${found.group}<br>
+      Percentage: <b>${found.percentage}%</b><br>
+      Status: ${getStatus(found.percentage)}<br>
+      Subjects: ${subs || 'N/A'}`;
+  }
+
+  return "Please connect the backend for detailed answers! 🤖";
+}
+
+loadStudents();
+onClassChange();
+</script>
+</body>
+</html>

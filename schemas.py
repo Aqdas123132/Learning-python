@@ -1,18 +1,26 @@
 from pydantic import BaseModel
+from typing import Optional
 
-class ItemBase(BaseModel):
+class StudentBase(BaseModel):
     name: str
-    description: str
+    email: str
+    department: str
+    marks: float
+    status: str
+    description: Optional[str] = None
 
-class ItemCreate(ItemBase):
+class StudentCreate(StudentBase):
     pass
 
-class ItemUpdate(ItemBase):
-    name: str | None = None
-    description: str | None = None
+class StudentUpdate(BaseModel):
+    name: Optional[str] = None
+    email: Optional[str] = None
+    department: Optional[str] = None
+    marks: Optional[float] = None
+    status: Optional[str] = None
+    description: Optional[str] = None
 
-class ItemResponse(ItemBase):
+class StudentResponse(StudentBase):
     id: int
-
     class Config:
         from_attributes = True
